@@ -6,7 +6,12 @@ whole loop judges the real merge result against the current base.
 ## Same-repo PR head
 
 1. `git fetch origin "$BASE_BRANCH"` to get the latest base tip.
-2. Merge it into the checked-out PR branch: `git merge --no-edit "origin/$BASE_BRANCH"`.
+2. Merge it into the checked-out PR branch: `git merge --no-edit "origin/$BASE_BRANCH"`. **Always a
+   merge commit, never a rebase.** A rebase rewrites the PR branch's existing commit SHA and requires
+   a force-push to update the remote, which directly conflicts with "never force-push unasked". A
+   merge commit is fast-forward-compatible with the existing remote branch, so the branch updates with
+   a plain `git push` — no force needed, on this repo's own head or a fork's carry-forward branch
+   alike. This applies to every tracker provider, not just ones whose UI nudges toward rebase.
 3. **Conflicts**: resolve trivial ones directly (import ordering, changelog/lock
    noise, non-overlapping edits). For anything non-trivial — overlapping logic,
    deleted-vs-modified files, semantic conflicts — do **not** hand-resolve blindly:
