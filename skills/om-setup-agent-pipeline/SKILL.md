@@ -90,7 +90,7 @@ Beyond the config, this skill produces the human-readable half of the pipeline: 
 
 ## Per-skill local overrides
 
-Every skill in this collection checks, right after loading the config, for a repo-local extension of the same name at `.ai/skills/<skill-name>/SKILL.md`. This skill does not create local skills; it only owns the convention. Full contract — extension semantics, what local rules can and cannot override, the safety clause: `references/agentic-setup.md`.
+Every skill in this collection checks, right after loading the config, for a repo-local extension of the same name at `.ai/skills/<skill-name>/SKILL.md`. This skill does not create local skills; it only owns the convention. Full contract — extension semantics, what local rules can and cannot override, the safety clause: `references/agentic-setup.md`. For how that location relates to where skills are actually installed — the canonical project-level `.agents/skills/`, the `.claude/skills/` shim Claude Code needs, and the `.codex/skills/` legacy-mirror case — see `references/skill-install-locations.md`.
 
 ## Workflow
 
@@ -106,7 +106,7 @@ Every skill in this collection checks, right after loading the config, for a rep
 
    Prefer commands mirroring what CI already runs (`.github/workflows/*.yml`).
 
-3. **Ask the user (skip with `--defaults`).** Confirm the detected validation commands, then ask which tracker provider (default `github`) and browser provider (default `agent-browser`) to install, the label mode (full taxonomy / subset / disabled), whether the QA gate is on, where specs live (`paths.specs`), an optional repo-local review checklist path, and which project docs to generate (each only when missing). Full question list with defaults and guidance: `references/interview-questions.md`.
+3. **Ask the user (skip with `--defaults`).** First determine whether this is a greenfield or existing-project setup by checking for an existing agent instruction file (`AGENTS.md`, `CLAUDE.md`, or equivalent) — on an existing project, read it in full before asking anything else, since it changes how the project-docs question (below) should be answered. Then confirm the detected validation commands, ask which tracker provider (default `github`) and browser provider (default `agent-browser`) to install, the label mode (full taxonomy / subset / disabled), whether the QA gate is on, where specs live (`paths.specs`), an optional repo-local review checklist path, and which project docs to generate (each only when missing, and — on an existing-project setup — paired with a reconciliation mode: link / merge / offer-diff / skip). Full question list with defaults and guidance: `references/interview-questions.md`.
 
 4. **Install the tracker descriptor.** Copy the shipped descriptor for the chosen tracker from this skill's `references/trackers/<tracker>.md` to `.ai/trackers/<tracker>.md` (create the directory). Rules:
 
@@ -124,7 +124,7 @@ Every skill in this collection checks, right after loading the config, for a rep
    - `CODE_REVIEW.md` derived from the detected stack and observed conventions.
    - `BACKWARD_COMPATIBILITY.md` derived from an inventory of the repo's actual public surfaces.
 
-   Show each generated document to the user before writing. Never overwrite an existing process doc or agent instruction file — when one exists, skip it and note that the skills will use the existing file as-is.
+   On an existing-project setup (question 0 in `references/interview-questions.md`), apply the chosen reconciliation mode (link / merge / offer-diff / skip) to `SDLC.md`, `CODE_REVIEW.md`, and `BACKWARD_COMPATIBILITY.md` instead of generating each independently from a fresh repo scan — full mechanics in `references/project-docs.md` → Existing-project reconciliation. Show each generated document to the user before writing. Never overwrite an existing process doc or agent instruction file — when one exists, skip it and note that the skills will use the existing file as-is.
 
 8. **Write and commit the config.** Write `.ai/agentic.config.json`, create the `paths.runs`, `paths.analysis`, `paths.specs`, `paths.scripts`, and `paths.qa` directories with a `.gitkeep` each, show the final file to the user, and offer to commit. Add `<paths.qa>/artifacts_*/`, the running-state descriptor `<paths.qa>/test-env.json`, and the credentials env file `<paths.qa>/test-env.env` to `.gitignore` (generated per run, not source), while keeping the generated `<paths.scripts>/` launchers committed so the environment is reproducible:
 
