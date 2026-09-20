@@ -6,7 +6,13 @@ The questions step 3 of `om-setup-agent-pipeline` asks the user (skipped with `-
    - **Greenfield** — no such file. Proceed with the rest of the interview as normal; every doc in question 8 generates fresh from the repo scan.
    - **Existing project** — a file is present. Read it in full now, not just its existence, and tell the user what you found (its scope: does it cover process/SDLC, review rules, contract surfaces, or just architecture?). Then, for each of `SDLC.md`, `CODE_REVIEW.md`, and `BACKWARD_COMPATIBILITY.md` the user opts into generating in question 8, ask which **reconciliation mode** to use rather than assuming "generate independently": **link** (new doc points at the existing file's relevant section), **merge** (generate from the template, seeded with the existing file's stated conventions, flagging any detected disagreement), **offer-diff** (show generated-from-scratch vs. existing-file-implied side by side and let the user pick per section), or **skip** (existing coverage is already sufficient). `AGENTS.md`/`CLAUDE.md` itself is never overwritten regardless of answer — this question is only about the other three docs. Full mechanics: `references/project-docs.md` → Existing-project reconciliation. On an unattended `--defaults` run with an existing file detected, default every doc to **link** (never independent generation) and say so plainly in the final report.
 1. Confirm or edit the detected validation commands.
-2. Which tracker provider to install (default: `github`). This sets the config's `tracker` field and which descriptor lands in `.ai/trackers/`.
+2. Which tracker provider to install (default: `github`):
+   - `github` — issues, PRs, reviews, CI, and labels through the `gh` CLI.
+   - `linear` — Linear issues through `schpet/linear-cli`, with GitHub as the required PR/review/CI companion. Setup installs both `linear.md` and `github.md`.
+   - `jira` — Jira Cloud work items through Atlassian CLI (`acli`), with GitHub as the required PR/review/CI companion. Setup installs both `jira.md` and `github.md`.
+   - a custom provider — scaffold from `TEMPLATE.md`; stop tracker-driven work until every required operation is filled in.
+
+   This sets the config's `tracker` field to the selected primary descriptor. Before accepting a split provider, confirm its issue CLI and the companion `gh` CLI are installed/authenticated, and explain the provider-specific environment/config prerequisites from its descriptor.
 3. Which browser provider to install (default: `agent-browser`; `playwright` is
    the compatibility choice). Explain that the selected descriptor owns
    autonomous CLI/browser provisioning and that repository-native E2E suites
