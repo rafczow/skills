@@ -50,9 +50,9 @@ Once labels and metadata match the real state, **hand off**: this skill leaves t
 
 When step 4's `om-auto-review-pr` run carried a fork PR forward (it bases a carry branch in the main repo on the fetched PR head — e.g. `carry/pr-{prNumber}-ready` — preserving the original commits and authorship, applies merges/fixes there, opens a replacement PR, and closes the original only after the replacement exists), confirm the replacement PR satisfies the Supersede Credit Rule so changelog tooling credits the original contributor, not the reviewer:
 
-- Its body starts (within the first 20 lines) with `Supersedes #{originalPr}` — changelog tooling matches `^Supersedes\s+#(\d+)\b` (case-insensitive).
+- Its body starts (within the first 20 lines) with `Supersedes {originalPrRef}` (this tracker's own PR/MR sigil, e.g. `#{originalPr}` on GitHub, `!{originalPr}` on GitLab) — changelog tooling matches `^Supersedes\s+[#!](\d+)\b` (case-insensitive).
 - It carries an explicit credit line — `Credit: original implementation by @{originalAuthor}. …` — matched as `Credit:\s+original\s+implementation\s+by\s+@handle`.
 - It is reassigned to the original author, with a handoff comment inviting them to do the next recheck from the carried-forward branch.
-- The closed original PR carries a `Closing in favor of #{newPrNumber} ({newPrUrl}).` comment crediting the original author (the fallback detection path for the credit rule).
+- The closed original PR carries a `Closing in favor of {newPrRef} ({newPrUrl}).` comment (this tracker's own PR/MR sigil) crediting the original author (the fallback detection path for the credit rule).
 
 If any of these are missing, fix them here (edit the replacement PR body, post the comments, reassign) before declaring merge-ready.

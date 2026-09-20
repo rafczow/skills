@@ -110,6 +110,13 @@ with than the GitHub equivalent in `github.md`:
   are readable back by **get-issue** / **get-pr**. The `ci-monitoring` label is **not** a claim
   signal — it marks work that is finished and reported while its CI-result follow-up is still owed,
   and never makes another skill back off.
+- **Self-assign carve-out: not needed by default.** GitLab does not auto-set assignee to the author
+  on issue/MR creation — it starts empty, same as GitHub, so the literal "any assignee other than the
+  automation user means locked" rule holds without adjustment. The one habit to watch for is the
+  **"Assign to me" quick action**, a one-click UI affordance some contributors use routinely on their
+  own issues/MRs; if a project's culture does that as a matter of course, adopt a project-specific
+  carve-out (e.g. treat self-assignment by the item's own author as not-locked) rather than applying
+  this descriptor's default blindly.
 - Long, multi-line comment bodies are posted with `--message "$(cat file)"` so formatting survives.
 - CI status truth comes from **get-pr-checks**; the *required* set comes from
   **get-required-checks**. When neither is readable, treat every reported job as required.
@@ -410,8 +417,10 @@ Three fields need their own calls, by design — request them only when the call
 glab api "projects/:fullpath/merge_requests/{prNumber}/approvals" | jq '.approved_by | length'
 # closingIssuesReferences
 glab api "projects/:fullpath/merge_requests/{prNumber}/closes_issues" | jq '[.[] | {number: .iid, url: .web_url}]'
-# additions/deletions
-glab api "projects/:fullpath/merge_requests/{prNumber}/changes" | jq '.changes | length'
+# additions/deletions (line counts, not file counts — the `/changes` endpoint's
+# `.changes | length` is the changed-file count, already covered by changedFiles above)
+glab api "projects/:fullpath/merge_requests/{prNumber}/diff_stats" \
+  | jq '{additions: ([.[].additions] | add // 0), deletions: ([.[].deletions] | add // 0)}'
 ```
 
 #### list-prs
@@ -684,12 +693,20 @@ glab api -X POST "projects/:fullpath/pipelines/{runId}/retry" | jq '{id, status}
 Note `glab ci retry <job>` retries a **single job**, not the pipeline — not what this operation means.
 
 #### watch-run
-Block until the pipeline for a branch finishes.
+Pipeline id → block until that specific pipeline finishes. `glab ci status --wait` only takes a
+**branch** (defaulting to the current one) and follows whatever its *latest* pipeline is — it cannot
+target a given pipeline id, so it silently watches the wrong run once a newer pipeline has started on
+that branch (e.g. a second push during the wait). Poll **get-run** by id instead:
 ```bash
-glab ci status --branch {branch} --wait
+while :; do
+  STATUS=$(glab ci get --pipeline-id {runId} --output json | jq -r '.status')
+  case "$STATUS" in
+    success|failed|canceled|skipped) echo "$STATUS"; break ;;
+  esac
+  sleep 15
+done
 ```
-Where the branch is not checked out, poll **get-run** until `status` leaves
-`created|waiting_for_resource|preparing|pending|running`, honouring `ci.maxWaitMinutes` from the config.
+Honour `ci.maxWaitMinutes` from the config as the polling loop's overall budget.
 
 ### Labels
 
@@ -713,8 +730,10 @@ Create every label in the config's taxonomy that does not exist yet; skip the on
 already reports. Needs the **Maintainer** role.
 
 ```bash
+EXISTING_LABELS=$(glab api --paginate "projects/:fullpath/labels" | jq -r '.[].name')
+
 create_if_missing() {   # $1 name, $2 hex (no #), $3 description
-  if glab api --paginate "projects/:fullpath/labels" | jq -r '.[].name' | grep -Fxq "$1"; then
+  if grep -Fxq "$1" <<< "$EXISTING_LABELS"; then
     echo "exists: $1"
   else
     glab label create --name "$1" --color "#$2" --description "$3"

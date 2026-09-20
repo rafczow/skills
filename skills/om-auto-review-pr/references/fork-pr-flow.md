@@ -32,15 +32,20 @@ Replacement PR requirements:
 - Mention that the branch was re-reviewed after autofix and is intended to be merge-ready
 - Reassign the replacement PR to the original PR author when possible, and leave a handoff comment inviting them to do the next recheck from the carried-forward branch
 
+`{prRef}` below is the PR/MR reference written in this tracker's own sigil (see `TEMPLATE.md`'s
+per-type ID namespace guidance) — `#{prNumber}` on a single-namespace tracker like GitHub,
+`!{prNumber}` on GitLab. Using the wrong sigil breaks changelog credit resolution
+(`om-auto-update-changelog/references/supersede-credit-rule.md` Path A), which matches either.
+
 Suggested replacement PR body:
 
 ```markdown
-Supersedes #{prNumber}
+Supersedes {prRef}
 
 Credit: original implementation by @{originalAuthor}. This follow-up PR carries that work forward with the requested fixes so it can merge without waiting on the original branch.
 
 ## Included work
-- Original changes from #{prNumber}
+- Original changes from {prRef}
 - Follow-up fixes applied during re-review
 ```
 
@@ -53,7 +58,7 @@ Thanks @{originalAuthor} — this replacement PR carries your original work forw
 Suggested original PR closing comment:
 
 ```markdown
-Closing in favor of #{newPrNumber} ({newPrUrl}).
+Closing in favor of {newPrRef} ({newPrUrl}).
 
 Credit to @{originalAuthor} for the original implementation. The replacement PR carries the same work forward with the requested fixes so it can merge without waiting on the fork branch.
 ```

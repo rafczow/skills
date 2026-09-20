@@ -21,15 +21,16 @@ Exclude these from commit tallies, from `primaryAuthor` / `viaAuthor`, and from 
 
 When a PR's credit resolves to nothing but excluded identities, render the bullet with **no** `*(@...)*` suffix at all — never credit the bot, and never fall back to the merger. When carried-forward work *originates* from a bot (a dependency bump reopened or rebased by a maintainer), the maintainer keeps the credit: there is no human original author to restore.
 
-## Path A: `Supersedes #N` in the PR body
+## Path A: `Supersedes #N` / `Supersedes !N` in the PR body
 
 `om-auto-review-pr` writes this template when it carries a fork PR forward. Regex (anchored to the first 20 lines of the body, case-insensitive):
 
 ```
-^Supersedes\s+#(\d+)\b
+^Supersedes\s+[#!](\d+)\b
 ```
 
-When matched, resolve the superseded PR's author via the tracker operation **get-pr** (field `author`) for `{supersededPrNumber}`. Set `primaryAuthor` to that author and `viaAuthor = mergedPrAuthor`. Emit `(supersedes #M)` in the summary text.
+Both sigils are matched because per-type-namespace trackers (GitLab: `!` for merge requests) don't use `#`
+for PRs — see `TEMPLATE.md`'s per-type ID namespace guidance. When matched, resolve the superseded PR's author via the tracker operation **get-pr** (field `author`) for `{supersededPrNumber}`. Set `primaryAuthor` to that author and `viaAuthor = mergedPrAuthor`. Emit `(supersedes #M)` in the summary text.
 
 ## Path B: `Credit: original implementation by @user` in the PR body
 
@@ -46,15 +47,17 @@ When matched, set `primaryAuthor` from the captured handle and `viaAuthor = merg
 When neither body regex on the merged PR matches, the carry-forward flow still leaves an authoritative trail on the **original** PR via `om-auto-review-pr`'s closing-comment template:
 
 ```
-Closing in favor of #{newPrNumber} ({newPrUrl}).
+Closing in favor of {newPrRef} ({newPrUrl}).
 
 Credit to @{originalAuthor} for the original implementation. ...
 ```
 
+`{newPrRef}` is this tracker's own PR/MR sigil (`#{newPrNumber}` on GitHub, `!{newPrNumber}` on GitLab).
+
 Detection is reversed compared to Paths A and B — you are walking *candidate superseded PRs*, not the merged PR itself. For each closed-unmerged PR in the same window (**list-prs**, state closed, `closed:>=${SINCE_DATE} is:unmerged`), check its body **and** its comments for a line matching:
 
 ```
-^Closing in favor of #(\d+)\b
+^Closing in favor of [#!](\d+)\b
 ```
 
 When the captured number equals the merged PR currently being credited, treat the merged PR as a carry-forward. Set `primaryAuthor` to the closed PR's author (via **get-pr**) and `viaAuthor` to the merged replacement's author.

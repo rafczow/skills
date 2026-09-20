@@ -30,7 +30,7 @@ contributor's fork). Do **not** try to force the base merge onto it here. Instea
 let step 4's `om-auto-review-pr` run its **fork carry-forward flow**: it bases a
 new branch in the main repo on the fetched PR head, merges/rebases against the
 base there, applies fixes, and opens a **replacement PR** that
-`Supersedes #{prNumber}` with credit to the original author (the requirements this
+`Supersedes {prRef}` (this tracker's own PR/MR sigil — see `fork-pr-flow.md`) with credit to the original author (the requirements this
 skill verifies on that replacement live in `references/pr-finalize.md`, fork
 supersede/credit section). From that point, `{prNumber}` in the rest of `om-auto-fix-pr`
 refers to the replacement PR, and the base-merge happens on the carry branch you
